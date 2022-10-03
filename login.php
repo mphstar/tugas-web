@@ -9,6 +9,7 @@ if (isset($_POST['submit'])) {
     $password = $_POST['txt_password'];
 
 
+
     if (!empty(trim($email)) && !empty(trim($password))) {
         $query = "SELECT * FROM user_detail WHERE email = '$email'";
         $result = $_crud->execute($query);
@@ -18,18 +19,33 @@ if (isset($_POST['submit'])) {
             $id = $row['id'];
             $emailval = $row['email'];
             $passwordval = $row['password'];
+            $fullname = $row['fullname'];
             $level = $row['level'];
         }
         if ($num != 0) {
             if ($emailval == $email && $passwordval == md5($password)) {
+                setcookie('id', $id, time() + (60 * 30 * 1 * 1), '/');
+                setcookie('email', $emailval, time() + 60 * 30 * 1 * 1, '/');
+                setcookie('password', $passwordval, time() + 60 * 30 * 1 * 1, '/');
+                setcookie('fullname', $fullname, time() + 60 * 30 * 1 * 1, '/');
+                setcookie('roles', $level, time() + 60 * 30 * 1 * 1, '/');
+
+                $_SESSION['id'] = $id;
+                $_SESSION['email'] = $emailval;
+                $_SESSION['password'] = $passwordval;
+                $_SESSION['roles'] = $level;
+                $_SESSION['fullname'] = $fullname;
+                $_SESSION['flashLogin'] = 'yes';
                 header('Location: dashboard.php');
             } else {
                 $error = 'Email atau password salah';
-                header('Location: login.php');
+
+                header('Location: login.php?error&email=' . $email);
             }
         } else {
             $error = 'User tidak ditemukan';
-            header('Location: login.php');
+
+            header('Location: login.php?error&email=' . $email);
         }
     }
 }
@@ -47,6 +63,7 @@ if (isset($_POST['submit'])) {
     <link rel="stylesheet" href="assets/css/pages/auth.css">
     <link rel="shortcut icon" href="assets/images/logo/favicon.svg" type="image/x-icon">
     <link rel="shortcut icon" href="assets/images/logo/favicon.png" type="image/png">
+    <link rel="stylesheet" href="assets/extensions/sweetalert2/sweetalert2.min.css">
 </head>
 
 <body class="home-bg">
@@ -60,18 +77,29 @@ if (isset($_POST['submit'])) {
                         <h1 class="auth-title">Log in.</h1>
                         <p class="auth-subtitle mb-5">Log in with your data that you entered during registration.</p>
 
-                        <form action="login.php" method="POST">
+                        <form action="login.php" method="POST" data-parsley-validate>
                             <div class="form-group position-relative has-icon-left mb-4">
-                                <input type="text" name="txt_email" class="form-control form-control-xl" placeholder="Username">
+                                <input type="text" name="txt_email" id="first-name-column" value="<?php if (isset($_GET['error'])) {
+                                                                                                        echo $_GET['email'];
+                                                                                                    } else {
+                                                                                                        echo '';
+                                                                                                    } ?>" data-parsley-required="true" class="form-control form-control-xl" placeholder="Username">
                                 <div class="form-control-icon">
                                     <i class="bi bi-person"></i>
                                 </div>
                             </div>
                             <div class="form-group position-relative has-icon-left mb-4">
-                                <input type="password" name="txt_password" class="form-control form-control-xl" placeholder="Password">
+                                <input type="password" name="txt_password" class="form-control form-control-xl" data-parsley-required="true" placeholder="Password">
                                 <div class="form-control-icon">
                                     <i class="bi bi-shield-lock"></i>
                                 </div>
+                            </div>
+                            <div class="form-check form-check-lg d-flex align-items-start">
+                                <p style="color:red"><?php if (isset($_GET['msg'])) {
+                                                            echo 'Anda harus login terlebih dahulu';
+                                                        } else {
+                                                            echo '';
+                                                        } ?></p>
                             </div>
                             <div class="form-check form-check-lg d-flex align-items-end">
                                 <input class="form-check-input me-2" type="checkbox" value="" id="flexCheckDefault">
@@ -92,8 +120,22 @@ if (isset($_POST['submit'])) {
         </div>
 
     </div>
+    <script src="assets/extensions/jquery/jquery.min.js"></script>
+    <script src="assets/extensions/parsleyjs/parsley.min.js"></script>
+    <script src="assets/js/pages/parsley.js"></script>
 
+    <script src="assets/extensions/sweetalert2/sweetalert2.min.js"></script>>
+    <script src="assets/js/pages/sweetalert2.js"></script>>
 
+    <?php if (isset($_GET['error'])) {
+    ?> <script>
+            Swal.fire(
+                'Gagal',
+                'Username atau password salah',
+                'error'
+            )
+        </script><?php
+                } ?>
 
 
 </body>

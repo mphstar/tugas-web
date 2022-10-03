@@ -1,6 +1,8 @@
 <?php require('koneksi.php');
 require('query.php');
 
+session_start();
+
 $_crud = new crud();
 if (isset($_POST['submit'])) {
     $email = $_POST['txt_email'];
@@ -29,6 +31,7 @@ if (isset($_POST['submit'])) {
         if (isset($_GET['register'])) {
             header('Location: login.php');
         } else {
+            $_SESSION['flashData'] = 'Tambah Data Berhasil';
             header('Location: dashboard.php');
         }
     }

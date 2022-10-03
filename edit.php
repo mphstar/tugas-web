@@ -1,12 +1,13 @@
 <?php require('koneksi.php');
 require('query.php');
 
+session_start();
+
 $_crud = new crud();
 
 if (isset($_POST['submit'])) {
     $id = $_GET['id'];
     $email = $_POST['txt_email'];
-    $password = $_POST['txt_password'];
     $fullname = $_POST['txt_name'];
     $roles = $_POST['txt_roles'];
     switch ($roles) {
@@ -20,10 +21,10 @@ if (isset($_POST['submit'])) {
             break;
     }
 
-    if (!empty(trim($email)) && !empty(trim($password))) {
-        $query = "UPDATE user_detail SET email = '$email', fullname = '$fullname', password = '".md5($password)."', level = '$roles' WHERE id = '$id'";
-        $result = $_crud->execute($query);
+    $query = "UPDATE user_detail SET email = '$email', fullname = '$fullname', level = '$roles' WHERE id = '$id'";
+    $result = $_crud->execute($query);
 
-        header('Location: dashboard.php');
-    }
+    $_SESSION['flashData'] = 'Ubah data Berhasil';
+
+    header('Location: dashboard.php');
 }

@@ -1,12 +1,24 @@
 <?php require('koneksi.php');
 require('query.php');
 
+session_start();
+
+if (isset($_COOKIE['id'])) {
+    $_SESSION['id'] = $_COOKIE['id'];
+    $_SESSION['email'] = $_COOKIE['email'];
+    $_SESSION['password'] = $_COOKIE['password'];
+    $_SESSION['roles'] = $_COOKIE['roles'];
+} else {
+    session_destroy();
+}
+
+if (!isset($_SESSION['id'])) {
+    header('Location: login.php?msg=error');
+}
+
 $_crud = new crud();
 
 
-if (isset($_GET['email'])) {
-    $email = $_GET['email'];
-}
 
 function checkRoles($roles)
 {
@@ -40,6 +52,12 @@ function checkRoles($roles)
     <link rel="stylesheet" href="assets/css/shared/iconly.css">
     <link rel="stylesheet" href="assets/extensions/@icon/dripicons/dripicons.css">
     <link rel="stylesheet" href="assets/css/pages/dripicons.css">
+
+    <link rel="stylesheet" href="assets/extensions/simple-datatables/style.css">
+    <link rel="stylesheet" href="assets/css/pages/simple-datatables.css">
+
+
+    <link rel="stylesheet" href="assets/extensions/sweetalert2/sweetalert2.min.css">
 
 </head>
 
@@ -90,7 +108,23 @@ function checkRoles($roles)
                     </ul>
                     <ul class="menu">
                         <li class="sidebar-item ">
-                            <a href="login.php" name="logout" class='sidebar-link'>
+                            <a href="pages/multiple_upload.php" name="multiple_upload" class='sidebar-link'>
+                                <i class="bi bi-pentagon-fill"></i>
+                                <span>Multiple Upload</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="menu">
+                        <li class="sidebar-item ">
+                            <a href="pages/vsga.php" name="vsga" class='sidebar-link'>
+                                <i class="bi bi-file-earmark-medical-fill"></i>
+                                <span>VSGA</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="menu">
+                        <li class="sidebar-item ">
+                            <a href="logout.php" name="logout" class='sidebar-link'>
                                 <i class="bi bi-door-closed-fill"></i>
                                 <span>Logout</span>
                             </a>
@@ -115,217 +149,198 @@ function checkRoles($roles)
             </div>
             <div class="page-content">
 
-                <div class="row" id="table-hover-row">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-
-                                <div class="row">
-                                    <div class="col-md-7">
-                                        <h4 class="card-title">Data Akun</h4>
-
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="dataTable-search"><input class="dataTable-input" placeholder="Search..." type="text"></div>
-                                    </div>
-
-                                    <div class="col-md-2">
-                                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#tambahdata">Tambah</button>
-                                    </div>
-
-
+                <section class="section">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row">
+                                <div class="col">
+                                    <h4>Tabel Data Akun</h4>
                                 </div>
-
-
+                                <div class="col-md-2">
+                                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#myModal">Tambah</button>
+                                </div>
                             </div>
-                            <div class="card-content">
-                                <div class="kasihjarak">
-                                    <!-- table hover -->
-                                    <div class="" style="overflow-x: auto;">
-                                        <table class="table table-hover mb-24">
-                                            <thead>
-                                                <tr>
-                                                    <th>No</th>
-                                                    <th>Email</th>
-                                                    <th>Nama</th>
-                                                    <th>Roles</th>
-                                                    <th>Actions</th>
+                        </div>
+                        <div class="card-body">
 
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php
-                                                $data = $_crud->execute('SELECT * FROM user_detail');
-                                                $no = 1;
-                                                while ($row = mysqli_fetch_array($data)) {
-                                                    $idval = $row['id'];
-                                                    $emailval = $row['email'];
-                                                    $fullname = $row['fullname'];
-                                                    $roles = $row['level'];
-                                                    $password = $row['password'];
-                                                ?>
-                                                    <tr>
-                                                        <td><?php echo $no; ?></td>
-                                                        <td><?php echo $emailval; ?></td>
-                                                        <td><?php echo $fullname; ?></td>
-                                                        <td><?php echo checkRoles($roles); ?></td>
-                                                        <td>
-                                                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deletedata<?php echo $idval; ?>">
-                                                                Delete
-                                                            </button>
-                                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateuser<?php echo $idval; ?>">
-                                                                Edit
-                                                            </button>
-                                                            <!--update data form Modal -->
-                                                            <div class="modal fade text-left" id="updateuser<?php echo $idval; ?>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel33" aria-hidden="true">
-                                                                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
-                                                                    <div class="modal-content">
-                                                                        <div class="modal-header">
-                                                                            <h4 class="modal-title" id="myModalLabel33">Update Data </h4>
-                                                                            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                                                                                <i data-feather="x"></i>
-                                                                            </button>
-                                                                        </div>
-                                                                        <form action="edit.php?id=<?php echo $idval; ?>" method="POST">
-                                                                            <div class="modal-body">
-                                                                                <label>Fullname: </label>
-                                                                                <div class="form-group">
-                                                                                    <input type="text" name="txt_name" placeholder="Email Address" value="<?php echo $fullname; ?>" class="form-control" required>
-                                                                                </div>
-                                                                                <label>Email: </label>
-                                                                                <div class="form-group">
-                                                                                    <input type="text" name="txt_email" placeholder="Email Address" value="<?php echo $emailval; ?>" class="form-control" required>
-                                                                                </div>
-                                                                                <label>Password: </label>
-                                                                                <div class="form-group">
-                                                                                    <input name="txt_password" type="password" placeholder="Password" value="<?php echo $password; ?>" class="form-control" required>
-                                                                                </div>
-                                                                                <label>Roles: </label>
-                                                                                <div class="form-group">
-                                                                                    <select name="txt_roles" class="form-select">
-                                                                                        <option>Admin</option>
-                                                                                        <option>User</option>
-                                                                                    </select>
-                                                                                </div>
-
-                                                                            </div>
-                                                                            <div class="modal-footer">
-                                                                                <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">
-                                                                                    <i class="bx bx-x d-block d-sm-none"></i>
-                                                                                    <span class="d-none d-sm-block">Close</span>
-                                                                                </button>
-                                                                                <button name="submit" type="submit" class="btn btn-primary ml-1" data-bs-dismiss="modal">
-                                                                                    <i class="bx bx-check d-block d-sm-none"></i>
-                                                                                    <span class="d-none d-sm-block">Update</span>
-                                                                                </button>
-                                                                            </div>
-                                                                        </form>
+                            <table class="table table-hover" id="table1">
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Email</th>
+                                        <th>Fullname</th>
+                                        <th>Level</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    $data = $_crud->execute('SELECT * FROM user_detail');
+                                    $no = 1;
+                                    while ($row = mysqli_fetch_array($data)) {
+                                        $idval = $row['id'];
+                                        $emailval = $row['email'];
+                                        $fullname = $row['fullname'];
+                                        $roles = $row['level'];
+                                        $password = $row['password'];
+                                    ?>
+                                        <tr>
+                                            <td><?php echo $no; ?></td>
+                                            <td><?php echo $emailval; ?></td>
+                                            <td><?php echo $fullname; ?></td>
+                                            <td><?php echo checkRoles($roles); ?></td>
+                                            <td>
+                                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deletedata<?php echo $idval; ?>">
+                                                    Delete
+                                                </button>
+                                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateuser<?php echo $idval; ?>">
+                                                    Edit
+                                                </button>
+                                                <!--update data form Modal -->
+                                                <div class="modal fade text-left" id="updateuser<?php echo $idval; ?>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel33" aria-hidden="true">
+                                                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h4 class="modal-title" id="myModalLabel33">Update Data </h4>
+                                                                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                                                    <i data-feather="x"></i>
+                                                                </button>
+                                                            </div>
+                                                            <form action="edit.php?id=<?php echo $idval; ?>" method="POST">
+                                                                <div class="modal-body">
+                                                                    <label>Fullname: </label>
+                                                                    <div class="form-group">
+                                                                        <input type="text" name="txt_name" placeholder="Email Address" value="<?php echo $fullname; ?>" class="form-control" required>
+                                                                    </div>
+                                                                    <label>Email: </label>
+                                                                    <div class="form-group">
+                                                                        <input type="text" name="txt_email" placeholder="Email Address" value="<?php echo $emailval; ?>" class="form-control" required>
+                                                                    </div>
+                                                                    <label>Roles: </label>
+                                                                    <div class="form-group">
+                                                                        <select selected="<?php echo checkRoles($roles); ?>" name="txt_roles" class="form-select">
+                                                                            <option>Admin</option>
+                                                                            <option>User</option>
+                                                                        </select>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-
-
-                                                            <div class="modal fade text-left" id="tambahdata" tabindex="-1" role="dialog" aria-labelledby="myModalLabel33" aria-hidden="true">
-                                                                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
-                                                                    <div class="modal-content">
-                                                                        <div class="modal-header">
-                                                                            <h4 class="modal-title" id="myModalLabel33">Tambah Data </h4>
-                                                                            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                                                                                <i data-feather="x"></i>
-                                                                            </button>
-                                                                        </div>
-                                                                        <form action="tambah.php" method="POST">
-                                                                            <div class="modal-body">
-                                                                                <label>Fullname: </label>
-                                                                                <div class="form-group">
-                                                                                    <input type="text" name="txt_name" placeholder="Fullname" class="form-control" required>
-                                                                                </div>
-                                                                                <label>Email: </label>
-                                                                                <div class="form-group">
-                                                                                    <input type="text" name="txt_email" placeholder="Email Address" class="form-control" required>
-                                                                                </div>
-                                                                                <label>Password: </label>
-                                                                                <div class="form-group">
-                                                                                    <input type="password" name="txt_password" placeholder="Password" class="form-control" required>
-                                                                                </div>
-                                                                                <label>Roles: </label>
-                                                                                <div class="form-group">
-                                                                                    <select name="txt_roles" class="form-select">
-                                                                                        <option>Admin</option>
-                                                                                        <option>User</option>
-                                                                                    </select>
-                                                                                </div>
-
-                                                                            </div>
-                                                                            <div class="modal-footer">
-                                                                                <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">
-                                                                                    <i class="bx bx-x d-block d-sm-none"></i>
-                                                                                    <span class="d-none d-sm-block">Close</span>
-                                                                                </button>
-                                                                                <button type="submit" name="submit" class="btn btn-primary ml-1">
-                                                                                    <i class="bx bx-check d-block d-sm-none"></i>
-                                                                                    <span class="d-none d-sm-block">Tambah</span>
-                                                                                </button>
-                                                                            </div>
-                                                                        </form>
-                                                                    </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">
+                                                                        <i class="bx bx-x d-block d-sm-none"></i>
+                                                                        <span class="d-none d-sm-block">Close</span>
+                                                                    </button>
+                                                                    <button name="submit" type="submit" class="btn btn-primary ml-1" data-bs-dismiss="modal">
+                                                                        <i class="bx bx-check d-block d-sm-none"></i>
+                                                                        <span class="d-none d-sm-block">Update</span>
+                                                                    </button>
                                                                 </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+
+
+
+                                                <!-- hapus data modal -->
+                                                <!--Danger theme Modal -->
+                                                <div class="modal fade text-left" id="deletedata<?php echo $idval; ?>" tabindex="-1" aria-labelledby="myModalLabel120" style="display: none;" aria-hidden="true">
+                                                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header bg-danger">
+                                                                <h5 class="modal-title white" id="myModalLabel120">
+                                                                    Hapus Data
+                                                                </h5>
+                                                                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x">
+                                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                                    </svg>
+                                                                </button>
                                                             </div>
-
-                                                            <!-- hapus data modal -->
-                                                            <!--Danger theme Modal -->
-                                                            <div class="modal fade text-left" id="deletedata<?php echo $idval; ?>" tabindex="-1" aria-labelledby="myModalLabel120" style="display: none;" aria-hidden="true">
-                                                                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
-                                                                    <div class="modal-content">
-                                                                        <div class="modal-header bg-danger">
-                                                                            <h5 class="modal-title white" id="myModalLabel120">
-                                                                                Hapus Data
-                                                                            </h5>
-                                                                            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                                                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x">
-                                                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                                                                </svg>
-                                                                            </button>
-                                                                        </div>
-                                                                        <form action="hapus.php?id=<?php echo $idval; ?>" method="POST">
-                                                                            <div class="modal-body">
-                                                                                Apakah anda yakin ingin menghapus data <b><?php echo $emailval; ?></b>
-                                                                            </div>
-                                                                            <div class="modal-footer">
-                                                                                <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">
-                                                                                    <i class="bx bx-x d-block d-sm-none"></i>
-                                                                                    <span class="d-none d-sm-block">Close</span>
-                                                                                </button>
-                                                                                <button type="submit" name="submit" class="btn btn-danger ml-1">
-                                                                                    <i class="bx bx-check d-block d-sm-none"></i>
-                                                                                    <span class="d-none d-sm-block">Yes</span>
-                                                                                </button>
-                                                                            </div>
-                                                                        </form>
-
-                                                                    </div>
+                                                            <form action="hapus.php?id=<?php echo $idval; ?>" method="POST">
+                                                                <div class="modal-body">
+                                                                    Apakah anda yakin ingin menghapus data <b><?php echo $emailval; ?></b>
                                                                 </div>
-                                                            </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">
+                                                                        <i class="bx bx-x d-block d-sm-none"></i>
+                                                                        <span class="d-none d-sm-block">Close</span>
+                                                                    </button>
+                                                                    <button type="submit" name="submit" class="btn btn-danger ml-1">
+                                                                        <i class="bx bx-check d-block d-sm-none"></i>
+                                                                        <span class="d-none d-sm-block">Yes</span>
+                                                                    </button>
+                                                                </div>
+                                                            </form>
 
-                                                        </td>
+                                                        </div>
+                                                    </div>
+                                                </div>
 
-                                                    </tr>
-                                                <?php
-                                                    $no++;
-                                                }
-                                                ?>
-                                            </tbody>
-                                        </table>
+                                            </td>
+
+                                        </tr>
+                                    <?php
+                                        $no++;
+                                    }
+                                    ?>
+
+
+                                </tbody>
+                            </table>
+                            <div class="modal fade text-left" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel33" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h4 class="modal-title" id="myModalLabel33">Tambah Data </h4>
+                                            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                                <i data-feather="x"></i>
+                                            </button>
+                                        </div>
+                                        <form action="tambah.php" method="POST">
+                                            <div class="modal-body">
+                                                <label>Fullname: </label>
+                                                <div class="form-group">
+                                                    <input type="text" name="txt_name" placeholder="Fullname" class="form-control" required>
+                                                </div>
+                                                <label>Email: </label>
+                                                <div class="form-group">
+                                                    <input type="text" name="txt_email" placeholder="Email Address" class="form-control" required>
+                                                </div>
+                                                <label>Password: </label>
+                                                <div class="form-group">
+                                                    <input type="password" name="txt_password" placeholder="Password" class="form-control" required>
+                                                </div>
+                                                <label>Roles: </label>
+                                                <div class="form-group">
+                                                    <select name="txt_roles" class="form-select">
+                                                        <option>Admin</option>
+                                                        <option>User</option>
+                                                    </select>
+                                                </div>
+
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">
+                                                    <i class="bx bx-x d-block d-sm-none"></i>
+                                                    <span class="d-none d-sm-block">Close</span>
+                                                </button>
+                                                <button type="submit" name="submit" class="btn btn-primary ml-1">
+                                                    <i class="bx bx-check d-block d-sm-none"></i>
+                                                    <span class="d-none d-sm-block">Tambah</span>
+                                                </button>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
-
-
-
                             </div>
                         </div>
                     </div>
-                </div>
+
+                </section>
+
+
             </div>
 
 
@@ -337,6 +352,36 @@ function checkRoles($roles)
 
     <!-- Need: Apexcharts -->
     <script src="assets/js/pages/dashboard.js"></script>
+    <script src="assets/extensions/simple-datatables/umd/simple-datatables.js"></script>
+    <script src="assets/js/pages/simple-datatables.js"></script>
+
+    <script src="assets/extensions/sweetalert2/sweetalert2.min.js"></script>
+    <script src="assets/js/pages/sweetalert2.js"></script>
+    <?php
+    if (isset($_SESSION['flashLogin'])) {
+    ?> <script>
+            Swal.fire(
+                'Welcome',
+                'Selamat datang <?php echo $_SESSION['fullname']; ?>',
+                'success'
+            )
+        </script> <?php
+                }
+                unset($_SESSION['flashLogin']);
+                    ?>
+
+<?php
+    if (isset($_SESSION['flashData'])) {
+    ?> <script>
+            Swal.fire(
+                'Berhasil',
+                '<?php echo $_SESSION['flashData'] ?>',
+                'success'
+            )
+        </script> <?php
+                }
+                unset($_SESSION['flashLogin']);
+                    ?>
 
 
 </body>
