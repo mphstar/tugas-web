@@ -1,14 +1,28 @@
 <?php require('koneksi.php');
 require('query.php');
 
+
 session_start();
 
 $_crud = new crud();
+
+function checkRoles($roles)
+{
+    switch ($roles) {
+        case '1':
+            return 'admin';
+            break;
+        case '2':
+            return 'user';
+            break;
+        default:
+            break;
+    }
+}
+
 if (isset($_POST['submit'])) {
     $email = $_POST['txt_email'];
     $password = $_POST['txt_password'];
-
-
 
     if (!empty(trim($email)) && !empty(trim($password))) {
         $query = "SELECT * FROM user_detail WHERE email = '$email'";
@@ -20,7 +34,7 @@ if (isset($_POST['submit'])) {
             $emailval = $row['email'];
             $passwordval = $row['password'];
             $fullname = $row['fullname'];
-            $level = $row['level'];
+            $level = checkRoles($row['level']);
         }
         if ($num != 0) {
             if ($emailval == $email && $passwordval == md5($password)) {
@@ -36,7 +50,9 @@ if (isset($_POST['submit'])) {
                 $_SESSION['roles'] = $level;
                 $_SESSION['fullname'] = $fullname;
                 $_SESSION['flashLogin'] = 'yes';
-                header('Location: dashboard.php');
+                
+                header('Location: index.php');
+
             } else {
                 $error = 'Email atau password salah';
 

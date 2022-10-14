@@ -7,5 +7,9 @@ if (!isset($_SESSION['id'])) {
     header('Location: login.php');
 } else {
     //echo($_COOKIE['id']);
-    header('Location: dashboard.php');
+    if ($_SESSION['roles'] == 'admin') {
+        header('Location: admin/dashboard.php');
+    } else {
+        header('Location: user/dashboard.php');
+    }
 }
